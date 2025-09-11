@@ -40,13 +40,13 @@ src/app/
 ```
 
 ### 重要なファイル
-- `codegen.ts` - GraphQLコード生成設定 (スキーマ: http://localhost:8080/graphql)
+- `codegen.ts` - GraphQLコード生成設定 (スキーマ: http://localhost:8080/query)
 - `src/app/apollo/client.ts` - Apollo Clientの認証・アップロードリンク設定
 - `src/app/providers/WithApolloProvider.tsx` - Apollo Providerラッパー
 - `src/app/layout.tsx` - メンテナンスモード対応のルートレイアウト
 
 ### GraphQL統合
-- スキーマエンドポイント: `http://localhost:8080/graphql` (codegen.tsで設定)
+- スキーマエンドポイント: `http://localhost:8080/query` (codegen.tsで設定)
 - 生成された型とフックは `src/app/gql/` に配置
 - 動画ファイル処理のアップロード対応Apollo Clientを使用
 - localStorageに保存されたBearerトークンによる認証
