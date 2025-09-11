@@ -14,7 +14,6 @@ interface UploadVideoData {
     isPrivate: boolean;
     isAdult: boolean;
     isExternalCutout: boolean;
-    isAds: boolean;
     createdAt: string;
     updatedAt: string;
     uploader: {
@@ -97,7 +96,6 @@ export default function Page() {
             isPrivate: formData.isPrivate,
             isAdult: formData.isAdult,
             isExternalCutout: formData.isExternalCutout,
-            isAds: false,
           },
         },
         context: {

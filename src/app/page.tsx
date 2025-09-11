@@ -32,7 +32,6 @@ const homePageVideosFragment = graphql(/* GraphQL */ `
     #     id
     #     title
     # }
-    isAd
     createdAt
     updatedAt
     watchCount

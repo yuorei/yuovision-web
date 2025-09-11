@@ -41,13 +41,6 @@ const incrementWatchCountDocument = graphql(/* GraphQL */ `
   }
 `);
 
-const watchCountAdVideoDocument = graphql(`
-  mutation WatchCountAdVideo($input: WatchCountAdVideoInput!) {
-    watchCountAdVideo(input: $input) {
-      success
-    }
-  }
-`);
 
 const trimVideoDocument = graphql(/* GraphQL */ `
   query CutVideo($input: CutVideoInput!) {
@@ -115,7 +108,6 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [isCounted, setIsCounted] = useState(false);
   const [IncrementWatchCount] = useMutation(incrementWatchCountDocument);
-  const [watchCountAdVideo] = useMutation(watchCountAdVideoDocument);
   const [showTrimModal, setShowTrimModal] = useState(false);
   const [trimStart, setTrimStart] = useState("0");
   const [trimEnd, setTrimEnd] = useState("0");
@@ -234,12 +226,6 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
         }
       };
 
-      const getClientIP = async (): Promise<string> => {
-        const response = await fetch("https://api.ipify.org?format=json");
-        const data = await response.json();
-        return data.ip;
-      };
-
       const onAltVideoEnd = async () => {
         if (isAltVideo) {
           try {
@@ -249,39 +235,6 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
                 "client" + "_" + crypto.randomUUID()
               );
             }
-
-            const clientIP = await getClientIP();
-
-            watchCountAdVideo({
-              variables: {
-                input: {
-                  adID: ads[currentTime2].adID,
-                  city: "",
-                  clientID: localStorage.getItem("clientID") as string,
-                  country: "",
-                  description: videoInfo.description || "",
-                  hostname: window.location.hostname,
-                  ipAddress: clientIP,
-                  language: navigator.language,
-                  location: "",
-                  networkDownlink: "",
-                  networkEffectiveType: "",
-                  org: "",
-                  pageTitle: document.title,
-                  platform: navigator.platform,
-                  postal: "",
-                  referrer: document.referrer,
-                  region: "",
-                  tags: (videoInfo.Tags as string[]) || [],
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  title: document.title,
-                  url: window.location.href,
-                  userAgent: navigator.userAgent,
-                  userID: "",
-                  videoID: videoInfo.id,
-                },
-              },
-            });
 
             setIsCounted(true);
           } catch (e) {
