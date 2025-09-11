@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
@@ -26,45 +26,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const tokenRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
+    const refreshToken = async (user: User) => {
+      try {
+        // Force refresh to get a new token
+        const token = await user.getIdToken(true);
+        localStorage.setItem('token', token);
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+      }
+    };
+
+    const setupTokenRefresh = (user: User) => {
+      // Clear any existing interval
+      if (tokenRefreshIntervalRef.current) {
+        clearInterval(tokenRefreshIntervalRef.current);
+      }
+
+      // Refresh token every 45 minutes (before the 1-hour expiration)
+      tokenRefreshIntervalRef.current = setInterval(() => {
+        refreshToken(user);
+      }, 45 * 60 * 1000);
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Get Firebase ID token and store in localStorage for GraphQL requests
         const token = await user.getIdToken();
         localStorage.setItem('token', token);
         setUser(user);
+        // Setup automatic token refresh
+        setupTokenRefresh(user);
       } else {
         localStorage.removeItem('token');
         setUser(null);
+        // Clear token refresh interval when user logs out
+        if (tokenRefreshIntervalRef.current) {
+          clearInterval(tokenRefreshIntervalRef.current);
+          tokenRefreshIntervalRef.current = null;
+        }
       }
       setLoading(false);
     });
 
-    return unsubscribe;
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+      if (tokenRefreshIntervalRef.current) {
+        clearInterval(tokenRefreshIntervalRef.current);
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      throw error;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUp = async (email: string, password: string) => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      throw error;
-    }
+    await createUserWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      throw error;
-    }
+    await signOut(auth);
   };
 
   const value = {
