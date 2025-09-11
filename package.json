@@ -21,6 +21,7 @@
     "apollo-upload-client": "^18.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "firebase": "^12.2.1",
     "graphql": "^16.9.0",
     "hls.js": "^1.4.14",
     "lucide-react": "^0.274.0",
