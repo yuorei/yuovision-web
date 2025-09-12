@@ -1,22 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { gql } from "@apollo/client";
-import { useMutation } from "@apollo/client";
+import React, { useState } from "react";
+import { useAuth } from "../providers/AuthProvider";
+import { gql, useMutation } from "@apollo/client";
 import CustomLink from "../components/custom-link";
 import LoadingPage from "../components/loading";
 import ErrorPage from "../components/error";
-
-interface Response {
-  access_token: string;
-  id_token: string;
-  expires_in: number;
-  refresh_expires_in: number;
-  refresh_token: string;
-  token_type: string;
-  "not-before-policy": number;
-  session_state: string;
-  scope: string;
-}
 
 const REGISTER_USER = gql`
   mutation RegisterUser($input: UserInput!) {
@@ -28,63 +16,51 @@ const REGISTER_USER = gql`
 `;
 
 const LoginForm: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const { signIn } = useAuth();
+  const [registerUser] = useMutation(REGISTER_USER);
+  
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_YUOREI_AUTH_API_URL}/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      // Firebase認証でログイン
+      await signIn(email, password);
+      
+      // GraphQLでユーザープロファイルを作成（存在しない場合）
+      try {
+        await registerUser({
+          variables: {
+            input: {
+              name: email.split('@')[0], // メールアドレスからユーザー名を生成
+              isSubscribed: false,
+              role: "NORMAL",
+            },
           },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
+        });
+      } catch (err: any) {
+        // ユーザーが既に存在する場合はエラーを無視
+        if (!err.message.includes("Duplicate")) {
+          console.error("ユーザープロファイル作成エラー:", err);
         }
-      );
-      if (!response.ok) {
-        throw new Error("Login failed");
       }
 
-      const loginData: Response = await response.json();
-      localStorage.setItem("token", loginData.id_token);
-      console.log("Login success:", localStorage.getItem("token"));
-      registerUser({
-        variables: {
-          input: {
-            name: username,
-            isSubscribed: false,
-            role: "NORMAL",
-          },
-        },
-      })
-        .then((response) => {
-          // 登録成功時の処理
-          console.log("登録成功:", response.data);
-          window.location.href = "/";
-        })
-        .catch((err) => {
-          if (!err.message.includes("Duplicate")) {
-            localStorage.removeItem("token");
-            alert("エラーが発生しました。もう一度ログインしてください。");
-            return;
-          }
-          window.location.href = "/";
-        });
+      window.location.href = "/";
     } catch (error) {
       console.error("Login error:", error);
-      alert("ユーザー名かパスワードが間違っています");
+      setError("メールアドレスかパスワードが間違っています");
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading) return <LoadingPage />;
-  if (error && !error.message.includes("Duplicate"))
-    return <ErrorPage errorMessage={error.message} />;
+  if (error) return <ErrorPage errorMessage={error} />;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
@@ -92,12 +68,12 @@ const LoginForm: React.FC = () => {
         <h2 className="text-2xl font-semibold text-white text-center">Login</h2>
         <div className="mt-4">
           <div>
-            <label className="block text-gray-300">Username</label>
+            <label className="block text-gray-300">Email</label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
               className="mt-2 p-3 block w-full bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50"
             />
           </div>
