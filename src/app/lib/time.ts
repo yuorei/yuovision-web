@@ -73,6 +73,16 @@ export function whenTimeAgo(dateString: string): string {
 }
 
 function formatDate(dateString: string): string {
+    // ISO 8601 format: "2025-09-12T16:33:47Z"
+    if (dateString.includes('T')) {
+        const [datePart, timePart] = dateString.split("T");
+        const [year, month, day] = datePart.split("-").map(part => parseInt(part));
+        const timeWithoutZ = timePart.replace('Z', '');
+        const [hour, minute, second] = timeWithoutZ.split(":").map(part => parseInt(part));
+        return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
+    }
+    
+    // Fallback for space-separated format
     const [datePart, timePart] = dateString.split(" ");
     const [year, month, day] = datePart.split("-").map(part => parseInt(part));
     const [hour, minute, second] = timePart.split(":").map(part => parseInt(part));
