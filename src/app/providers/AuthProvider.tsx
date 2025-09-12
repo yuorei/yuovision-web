@@ -54,14 +54,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Get Firebase ID token and store in localStorage for GraphQL requests
-        // TODO: Consider using httpOnly cookies for enhanced security in production
-        // to mitigate XSS attacks (would require server-side token management)
-        const token = await user.getIdToken();
-        localStorage.setItem('token', token);
-        setUser(user);
-        // Setup automatic token refresh
-        setupTokenRefresh(user);
+        try {
+          // Get Firebase ID token and store in localStorage for GraphQL requests
+          // TODO: Consider using httpOnly cookies for enhanced security in production
+          // to mitigate XSS attacks (would require server-side token management)
+          const token = await user.getIdToken();
+          console.log('Firebase token obtained:', token.substring(0, 50) + '...');
+          localStorage.setItem('token', token);
+          setUser(user);
+          // Setup automatic token refresh
+          setupTokenRefresh(user);
+        } catch (error) {
+          console.error('Failed to get Firebase ID token:', error);
+          setUser(null);
+        }
       } else {
         localStorage.removeItem('token');
         setUser(null);
