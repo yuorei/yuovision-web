@@ -47,12 +47,25 @@ export default function AllVideoVertical({ videoID }: Props) {
   const { loading, error, data } = useQuery(GET_VIDEOS_QUERY);
   if (loading) return <LoadingPage />;
   if (error) return <ErrorPage errorMessage={error.message} />;
+  
+  const filteredVideos = data.videos.filter((video: Video) => video.id !== videoID);
+  
+  if (!data.videos || filteredVideos.length === 0) {
+    return (
+      <main>
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-center">
+          <div className="text-gray-400 text-4xl mb-2">📹</div>
+          <p className="text-gray-400">他に動画がありません</p>
+        </div>
+      </main>
+    );
+  }
+  
   return (
     <main>
       <div className="space-y-2">
         <div className="grid grid-cols-1 gap-4">
-          {data.videos
-            .filter((video: Video) => video.id !== videoID)
+          {filteredVideos
             .map((video: Video) => (
               <Link href={`/video/${video.id}`} key={video.id}>
                 <div className="flex flex-col sm:flex-row bg-black rounded-lg shadow-md overflow-hidden">
