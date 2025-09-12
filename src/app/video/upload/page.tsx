@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useSubscription } from "@apollo/client";
 import { gql } from "@apollo/client";
+import { useRouter } from "next/navigation";
 
 interface UploadVideoData {
   UploadVideo: {
@@ -86,12 +87,15 @@ interface VideoProcessingUpdate {
 }
 
 export default function Page() {
+  const router = useRouter();
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadVideo] = useMutation<UploadVideoData>(UPLOAD_VIDEO_MUTATION);
   const [loading, setLoading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [videoData, setVideoData] = useState<UploadVideoData['UploadVideo'] | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Subscribe to video processing updates
   const { data: subscriptionData } = useSubscription<VideoProcessingUpdate>(
@@ -114,7 +118,7 @@ export default function Page() {
       // Auto-redirect when processing is completed
       if (updatedProcessingInfo.status === 'COMPLETED') {
         setTimeout(() => {
-          window.location.href = `/video/${videoData.id}`;
+          router.push(`/video/${videoData.id}`);
         }, 2000);
       }
     }
@@ -148,23 +152,25 @@ export default function Page() {
       
       if (name === "video") {
         if (file.size > maxVideoSize) {
-          alert("動画ファイルは500MB以下にしてください。");
+          setValidationError("動画ファイルは500MB以下にしてください。");
           return;
         }
         if (!file.type.startsWith('video/')) {
-          alert("動画ファイルを選択してください。");
+          setValidationError("動画ファイルを選択してください。");
           return;
         }
+        setValidationError(null);
         setVideoPreview(URL.createObjectURL(file));
       } else if (name === "thumbnailImage") {
         if (file.size > maxImageSize) {
-          alert("画像ファイルは10MB以下にしてください。");
+          setValidationError("画像ファイルは10MB以下にしてください。");
           return;
         }
         if (!file.type.startsWith('image/')) {
-          alert("画像ファイルを選択してください。");
+          setValidationError("画像ファイルを選択してください。");
           return;
         }
+        setValidationError(null);
         setImagePreview(URL.createObjectURL(file));
       }
       
@@ -181,19 +187,23 @@ export default function Page() {
   };
 
   const handleUpload = async () => {
+    // Clear previous errors
+    setErrorMessage(null);
+    setValidationError(null);
+    
     // Validation
     if (!formData.video) {
-      alert("動画ファイルを選択してください。");
+      setValidationError("動画ファイルを選択してください。");
       return;
     }
     
     if (!formData.title.trim()) {
-      alert("タイトルを入力してください。");
+      setValidationError("タイトルを入力してください。");
       return;
     }
     
     if (formData.title.length > 100) {
-      alert("タイトルは100文字以下にしてください。");
+      setValidationError("タイトルは100文字以下にしてください。");
       return;
     }
     
@@ -231,23 +241,21 @@ export default function Page() {
       // If processing is completed, redirect to video page
       if (data?.UploadVideo.processingInfo.status === 'COMPLETED') {
         setTimeout(() => {
-          window.location.href = `/video/${data?.UploadVideo.id}`;
+          router.push(`/video/${data?.UploadVideo.id}`);
         }, 2000);
       }
     } catch (error) {
-      let errorSting = error as string;
-      console.log(errorSting);
-      if (errorSting == "ApolloError: id is nil") {
-        // /loginに移動
-        alert("再度ログインしてください");
-        window.location.href = "/login";
+      let errorString = error as string;
+      console.log(errorString);
+      if (errorString == "ApolloError: id is nil") {
+        setErrorMessage("再度ログインしてください");
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
         return;
       }
-      alert(errorSting);
-      console.error(
-        "アップロードエラー:",
-        errorSting == "ApolloError: id is nil"
-      );
+      setErrorMessage(errorString);
+      console.error("アップロードエラー:", errorString);
     } finally {
       setLoading(false); // ローディングを終了
     }
@@ -321,7 +329,7 @@ export default function Page() {
 
           <div className="flex space-x-4">
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => router.push('/')}
               className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
             >
               ホームに戻る
@@ -329,7 +337,7 @@ export default function Page() {
             
             {videoData.processingInfo.status === 'COMPLETED' && (
               <button
-                onClick={() => window.location.href = `/video/${videoData.id}`}
+                onClick={() => router.push(`/video/${videoData.id}`)}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 動画を見る
@@ -360,6 +368,19 @@ export default function Page() {
         <h1 className="text-2xl font-semibold text-white text-center mb-4">
           ビデオアップロード
         </h1>
+        
+        {/* Error Messages */}
+        {validationError && (
+          <div className="mb-4 p-3 bg-red-800 text-red-200 rounded-md text-sm">
+            {validationError}
+          </div>
+        )}
+        
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-800 text-red-200 rounded-md text-sm">
+            {errorMessage}
+          </div>
+        )}
         
         <div className="mb-6 p-3 bg-gray-700 rounded-md text-sm text-gray-300">
           <p className="font-medium mb-1">アップロード制限:</p>
