@@ -1,9 +1,23 @@
 "use client";
 import React, { useState, ChangeEvent } from "react";
+import { useAuth } from "../providers/AuthProvider";
+import { gql, useMutation } from "@apollo/client";
 import LoadingPage from "../components/loading";
 import ErrorPage from "../components/error";
 
+const REGISTER_USER = gql`
+  mutation RegisterUser($input: UserInput!) {
+    registerUser(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
 export default function CreateUserPage() {
+  const { signUp } = useAuth();
+  const [registerUser] = useMutation(REGISTER_USER);
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -14,7 +28,7 @@ export default function CreateUserPage() {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
@@ -32,36 +46,34 @@ export default function CreateUserPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const formDataToSend = new FormData();
-    Object.keys(formData).forEach((key) => {
-      const value = formData[key as keyof typeof formData];
-      if (value !== null) {
-        formDataToSend.append(key, value);
-      }
-    });
+    setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_YUOREI_AUTH_API_URL}/user`,
-        {
-          method: "POST",
-          body: formDataToSend,
-        }
-      );
+      // Firebase認証でユーザー作成
+      await signUp(formData.email, formData.password);
+      
+      // GraphQLでユーザープロファイル作成
+      await registerUser({
+        variables: {
+          input: {
+            name: formData.username,
+            isSubscribed: false,
+            role: "NORMAL",
+          },
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-      window.location.href = "/login";
+      window.location.href = "/";
     } catch (e) {
       console.error("ユーザー作成エラー:", e);
+      setError("ユーザー作成に失敗しました");
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <LoadingPage />;
-  if (error) return <ErrorPage errorMessage={"不明なエラー"} />;
+  if (error) return <ErrorPage errorMessage={error} />;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
