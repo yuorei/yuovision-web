@@ -48,7 +48,17 @@ export default function Index() {
   const videos = useFragment(homePageVideosFragment, data?.videos);
   if (loading) return <LoadingPage />;
   if (error) return <ErrorPage errorMessage={error.message} />;
-  if (!videos || videos.length == 0) return <ErrorPage errorMessage="データが見つかりませんでした" />;
+  if (!videos || videos.length == 0) {
+    return (
+      <div className="max-w-full">
+        <div className="flex flex-col items-center justify-center min-h-[400px] px-10 text-center">
+          <div className="text-gray-400 text-6xl mb-4">📹</div>
+          <h2 className="text-white text-2xl font-bold mb-2">動画がありません</h2>
+          <p className="text-gray-400 text-lg">まだアップロードされた動画がありません。</p>
+        </div>
+      </div>
+    );
+  }
 
   const num = getRandomArbitrary(0, videos.length);
 
