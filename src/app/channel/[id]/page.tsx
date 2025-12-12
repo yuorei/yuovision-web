@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { gql } from "@apollo/client";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GetUserResponse, GetUserVariables } from "@/app/model/user";
 import { Video as videoInterface } from "@/app/model/video";
 import Link from "next/link";
@@ -64,8 +64,14 @@ const GET_USER_BY_AUTH = gql`
 export default function Video({ params }: { params: { id: string } }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1280);
 
-  const [subscribeChannel] = useMutation(SUBSCRIBE_CHANNEL);
-  const [unSubscribeChannel] = useMutation(UNSUBSCRIBE_CHANNEL);
+  const [subscribeChannel] = useMutation<
+    { subscribeChannel: { isSuccess: boolean } },
+    { channelID: string }
+  >(SUBSCRIBE_CHANNEL);
+  const [unSubscribeChannel] = useMutation<
+    { unSubscribeChannel: { isSuccess: boolean } },
+    { channelID: string }
+  >(UNSUBSCRIBE_CHANNEL);
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const handleLogin = () => {
@@ -85,12 +91,12 @@ export default function Video({ params }: { params: { id: string } }) {
     error: userError,
     data: userData,
     refetch: userRefetch,
-  } = useQuery(GET_USER_BY_AUTH);
+  } = useQuery<{ userByAuth: { subscribechannelids: string[]; id: string } | null }>(GET_USER_BY_AUTH);
 
   useEffect(() => {
-    if (userData && uploaderData) {
+    if (userData?.userByAuth && uploaderData?.user) {
       setIsSubscribed(
-        userData.userByAuth?.subscribechannelids.includes(uploaderData.user.id)
+        userData.userByAuth.subscribechannelids.includes(uploaderData.user.id)
       );
     }
   }, [userData, uploaderData]);
@@ -100,17 +106,20 @@ export default function Video({ params }: { params: { id: string } }) {
     subscribe: boolean
   ) => {
     try {
-      const response = subscribe
-        ? await subscribeChannel({ variables: { channelID } })
-        : await unSubscribeChannel({ variables: { channelID } });
-      if (subscribe && response.data.subscribeChannel.isSuccess) {
-        console.log("Subscribed successfully");
-        setIsSubscribed(true);
-        userRefetch(); // Optionally refetch user data
-      } else if (!subscribe && response.data.unSubscribeChannel.isSuccess) {
-        console.log("Unsubscribed successfully");
-        setIsSubscribed(false);
-        userRefetch(); // Optionally refetch user data
+      if (subscribe) {
+        const response = await subscribeChannel({ variables: { channelID } });
+        if (response.data?.subscribeChannel?.isSuccess) {
+          console.log("Subscribed successfully");
+          setIsSubscribed(true);
+          userRefetch(); // Optionally refetch user data
+        }
+      } else {
+        const response = await unSubscribeChannel({ variables: { channelID } });
+        if (response.data?.unSubscribeChannel?.isSuccess) {
+          console.log("Unsubscribed successfully");
+          setIsSubscribed(false);
+          userRefetch(); // Optionally refetch user data
+        }
       }
     } catch (error) {
       console.error("Error in subscription change:", error);

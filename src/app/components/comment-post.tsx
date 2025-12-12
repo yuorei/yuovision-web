@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useMutation } from "@apollo/client";
 import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 const POST_COMMENT = gql`
   mutation PostComment($input: PostCommentInput!) {

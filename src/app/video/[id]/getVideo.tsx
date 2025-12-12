@@ -26,6 +26,9 @@ export async function getVideo({ id }: { id: string }) {
       query: GET_VIDEO_QUERY,
       variables: { id },
     });
+    if (!data?.video) {
+      return null;
+    }
     return data.video;
   } catch (error) {
     console.error("Error fetching video:", error);

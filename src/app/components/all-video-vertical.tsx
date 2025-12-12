@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Video } from "@/app/model/video";
 import Link from "next/link";
 import Image from "next/image";
-import { useQuery, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { timeAgo } from "@/app/lib/time";
 import ErrorPage from "./error";
 import LoadingPage from "./loading";
@@ -44,10 +45,14 @@ export default function AllVideoVertical({ videoID }: Props) {
     }
   `;
 
-  const { loading, error, data } = useQuery(GET_VIDEOS_QUERY);
+  const { loading, error, data } = useQuery<{ videos: Video[] }>(GET_VIDEOS_QUERY);
   if (loading) return <LoadingPage />;
   if (error) return <ErrorPage errorMessage={error.message} />;
   
+  if (!data?.videos) {
+    return <LoadingPage />;
+  }
+
   const filteredVideos = data.videos.filter((video: Video) => video.id !== videoID);
   
   if (!data.videos || filteredVideos.length === 0) {

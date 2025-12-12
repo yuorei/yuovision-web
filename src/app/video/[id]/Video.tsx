@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import HLSPlayer from "@/app/components/HLSPlayer";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import AllVideoVertical from "@/app/components/all-video-vertical";
 import Comments from "@/app/components/comment";
 import LoadingPage from "@/app/components/loading";

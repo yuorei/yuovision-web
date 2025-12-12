@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { User, type Auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirebaseAuth } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -25,10 +25,19 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [auth, setAuth] = useState<Auth | null>(null);
 
   const tokenRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    const firebaseAuth = getFirebaseAuth();
+    if (!firebaseAuth) {
+      setLoading(false);
+      return;
+    }
+
+    setAuth(firebaseAuth);
+
     const refreshToken = async (user: User) => {
       try {
         // Force refresh to get a new token
@@ -52,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }, 45 * 60 * 1000);
     };
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
       if (user) {
         try {
           // Get Firebase ID token and store in localStorage for GraphQL requests
@@ -90,14 +99,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized.');
+    }
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUp = async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized.');
+    }
     await createUserWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized.');
+    }
     await signOut(auth);
   };
 

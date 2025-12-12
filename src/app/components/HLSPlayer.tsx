@@ -12,7 +12,7 @@ import {
   Scissors,
 } from "lucide-react";
 import { GetVideoFragmentFragment } from "@/app/gql/graphql";
-import { useMutation, useLazyQuery } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client/react";
 import { graphql } from "@/app/gql";
 import Link from "next/link";
 import Image from "next/image";

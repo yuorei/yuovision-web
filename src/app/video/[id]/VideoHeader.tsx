@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { whenTimeAgo } from "@/app/lib/time";
 
-import { useQuery, useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { useState, useEffect } from "react";
 import LoadingPage from "@/app/components/loading";
 import { graphql } from "@/app/gql";

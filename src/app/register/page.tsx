@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, ChangeEvent } from "react";
 import { useAuth } from "../providers/AuthProvider";
-import { gql, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import LoadingPage from "../components/loading";
 import ErrorPage from "../components/error";
 

@@ -2,7 +2,12 @@
 const nextConfig = {
     output: 'standalone',
     images: {
-        domains: ['video-storage.yuorei.com'],
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "video-storage.yuorei.com",
+            },
+        ],
     },
 };
 

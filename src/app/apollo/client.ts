@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
-import { setContext } from '@apollo/client/link/context';
+import { setContext } from "@apollo/client/link/context";
+import UploadHttpLink from "apollo-upload-client/UploadHttpLink.mjs";
 
 const url = `${process.env.NEXT_PUBLIC_API_URL}/query`
 
@@ -17,9 +17,7 @@ const authLink = setContext((_, { headers }) => {
   }
 });
 
-const uploadLink = createUploadLink({
-  uri: url,
-});
+const uploadLink = new UploadHttpLink({ uri: url });
 
 export const client = new ApolloClient({
   cache: new InMemoryCache(),
