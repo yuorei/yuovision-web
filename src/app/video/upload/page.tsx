@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useMutation, useSubscription } from "@apollo/client";
 import { gql } from "@apollo/client";
+import { useMutation, useSubscription } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 interface UploadVideoData {

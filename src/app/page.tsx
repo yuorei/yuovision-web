@@ -3,7 +3,7 @@ import AllVideo from "@/app/components/all-video";
 import ErrorPage from "./components/error";
 import LoadingPage from "./components/loading";
 
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useFragment } from "@/app//gql/fragment-masking";
 
 import HLSBillBoard from "@/app/components/HLSBillBoard";

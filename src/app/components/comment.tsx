@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
 import { gql } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { timeAgo } from "@/app/lib/time";
 import CustomLink from "@/app/components/custom-link";
 import LoadingPage from "./loading";

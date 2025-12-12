@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,6 +10,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export default app;
+const isBrowser = typeof window !== 'undefined';
+
+let firebaseApp: FirebaseApp | null = null;
+let firebaseAuth: Auth | null = null;
+
+const ensureFirebase = () => {
+  if (!isBrowser) {
+    return null;
+  }
+
+  if (!firebaseApp) {
+    firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  }
+
+  if (!firebaseAuth) {
+    firebaseAuth = getAuth(firebaseApp);
+  }
+
+  return { app: firebaseApp, auth: firebaseAuth };
+};
+
+export const getFirebaseAuth = () => {
+  const firebase = ensureFirebase();
+  return firebase?.auth ?? null;
+};
+
+export const getFirebaseApp = () => {
+  const firebase = ensureFirebase();
+  return firebase?.app ?? null;
+};
